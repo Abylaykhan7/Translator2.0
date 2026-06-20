@@ -147,9 +147,9 @@
 <body>
     <div class="container">
         <h1> Аудио Переводчик PRO</h1>
-        <p class="subtitle">Alem.Cloud • Kimi / GPT-OSS / DeepSeek</p>
+        <p class="subtitle">Alem.Cloud • Автоматический выбор модели</p>
         <div class="api-status loading" id="apiStatus">🔌 Проверка подключения...</div>
-        <div class="current-model" id="currentModelDisplay">Модель: Kimi K2 Thinking</div>
+        <div class="current-model" id="currentModelDisplay">Модель: all-models (авто)</div>
         
         <div class="direction-selector">
             <button class="dir-btn active" id="dirListen">👂 Слушать<br><small>Их → Русский</small></button>
@@ -169,17 +169,8 @@
             <div class="selector-group">
                 <div class="selector-label">Язык собеседника:</div>
                 <div class="selector-buttons">
-                    <button class="sel-btn active" id="langZh">🇨🇳 Китайский</button>
+                    <button class="sel-btn active" id="langZh">🇨 Китайский</button>
                     <button class="sel-btn" id="langEn">🇬🇧 Английский</button>
-                </div>
-            </div>
-            
-            <div class="selector-group">
-                <div class="selector-label">Модель перевода:</div>
-                <div class="selector-buttons">
-                    <button class="sel-btn active" id="modelKimi">Kimi K2</button>
-                    <button class="sel-btn" id="modelGpt">GPT-OSS-120B</button>
-                    <button class="sel-btn" id="modelDeep">DeepSeek V4</button>
                 </div>
             </div>
             
@@ -195,11 +186,11 @@
                 <p id="translatedText">Перевод появится здесь...</p>
             </div>
             
-            <button class="voice-btn" id="speakBtn"> Озвучить перевод</button>
+            <button class="voice-btn" id="speakBtn">🔊 Озвучить перевод</button>
             
             <div class="duration" id="duration">00:00</div>
             
-            <button class="mic-button" id="micButton"></button>
+            <button class="mic-button" id="micButton">🎤</button>
             <div class="status" id="status">Готов к работе</div>
         </div>
         
@@ -209,17 +200,8 @@
                 <div class="selector-label">Язык аудио:</div>
                 <div class="selector-buttons">
                     <button class="sel-btn active" id="fileLangZh">🇨🇳 Китайский</button>
-                    <button class="sel-btn" id="fileLangEn">🇬 Английский</button>
-                    <button class="sel-btn" id="fileLangRu">🇺 Русский</button>
-                </div>
-            </div>
-            
-            <div class="selector-group">
-                <div class="selector-label">Модель перевода:</div>
-                <div class="selector-buttons">
-                    <button class="sel-btn active" id="fileModelKimi">Kimi K2</button>
-                    <button class="sel-btn" id="fileModelGpt">GPT-OSS-120B</button>
-                    <button class="sel-btn" id="fileModelDeep">DeepSeek V4</button>
+                    <button class="sel-btn" id="fileLangEn">🇬🇧 Английский</button>
+                    <button class="sel-btn" id="fileLangRu">🇷🇺 Русский</button>
                 </div>
             </div>
             
@@ -239,7 +221,7 @@
                 <p id="fileTranslatedText">Перевод появится здесь...</p>
             </div>
             
-            <button class="voice-btn" id="fileSpeakBtn"> Озвучить перевод</button>
+            <button class="voice-btn" id="fileSpeakBtn">🔊 Озвучить перевод</button>
         </div>
         
         <!-- История -->
@@ -250,7 +232,7 @@
             <button class="clear-btn" id="clearHistoryBtn">🗑️ Очистить историю</button>
         </div>
         
-        <div class="loading" id="loading">⏳ Обработка...</div>
+        <div class="loading" id="loading"> Обработка...</div>
         <div class="error" id="error"></div>
     </div>
 
@@ -259,26 +241,15 @@
         const API_KEY = 'sk-e8s2eOPoLT-yIP4qvbspHA';
         const API_BASE_URL = 'https://llm.nitec.kz/v1';
         
-        // Правильные имена моделей из Alem.Cloud
-        const MODELS = {
-            kimi: 'moonshotai/Kimi-K2-Thinking',
-            gpt: 'openai/gpt-oss-120b',
-            deep: 'deepseek-ai/DeepSeek-V4-Pro',
-            whisper: 'openai/whisper-large-v3-turbo'
-        };
-        
-        const MODEL_NAMES = {
-            'moonshotai/Kimi-K2-Thinking': 'Kimi K2 Thinking',
-            'openai/gpt-oss-120b': 'GPT-OSS-120B',
-            'deepseek-ai/DeepSeek-V4-Pro': 'DeepSeek V4 Pro'
-        };
+        // ВАЖНО: используем all-models (универсальный алиас)
+        // Твой API ключ имеет доступ только к этой модели
+        const TRANSLATE_MODEL = 'all-models';
+        const WHISPER_MODEL = 'openai/whisper-large-v3-turbo';
         
         // Состояние приложения
         let currentLanguage = 'zh-CN';
         let currentDirection = 'listen';
-        let currentModel = MODELS.kimi;
         let fileLanguage = 'zh-CN';
-        let fileModel = MODELS.kimi;
         let isRecording = false;
         let recognition = null;
         let recordingStartTime = null;
@@ -355,28 +326,6 @@
                 document.getElementById('fileLangEn').classList.remove('active');
             });
             
-            // Модели (live) - ВАЖНО: мгновенное обновление без перезагрузки
-            document.getElementById('modelKimi').addEventListener('click', function() {
-                setLiveModel(MODELS.kimi, 'modelKimi');
-            });
-            document.getElementById('modelGpt').addEventListener('click', function() {
-                setLiveModel(MODELS.gpt, 'modelGpt');
-            });
-            document.getElementById('modelDeep').addEventListener('click', function() {
-                setLiveModel(MODELS.deep, 'modelDeep');
-            });
-            
-            // Модели (file)
-            document.getElementById('fileModelKimi').addEventListener('click', function() {
-                setFileModel(MODELS.kimi, 'fileModelKimi');
-            });
-            document.getElementById('fileModelGpt').addEventListener('click', function() {
-                setFileModel(MODELS.gpt, 'fileModelGpt');
-            });
-            document.getElementById('fileModelDeep').addEventListener('click', function() {
-                setFileModel(MODELS.deep, 'fileModelDeep');
-            });
-            
             // Микрофон
             document.getElementById('micButton').addEventListener('click', function() {
                 toggleRecording();
@@ -410,31 +359,6 @@
                     renderHistory();
                 }
             });
-        }
-        
-        // ===== ПЕРЕКЛЮЧЕНИЕ МОДЕЛЕЙ (мгновенно, без перезагрузки) =====
-        function setLiveModel(model, btnId) {
-            currentModel = model;
-            document.getElementById('modelKimi').classList.remove('active');
-            document.getElementById('modelGpt').classList.remove('active');
-            document.getElementById('modelDeep').classList.remove('active');
-            document.getElementById(btnId).classList.add('active');
-            updateModelDisplay(model);
-            console.log('✅ Модель изменена на:', MODEL_NAMES[model] || model);
-        }
-        
-        function setFileModel(model, btnId) {
-            fileModel = model;
-            document.getElementById('fileModelKimi').classList.remove('active');
-            document.getElementById('fileModelGpt').classList.remove('active');
-            document.getElementById('fileModelDeep').classList.remove('active');
-            document.getElementById(btnId).classList.add('active');
-            console.log('✅ Модель файла изменена на:', MODEL_NAMES[model] || model);
-        }
-        
-        function updateModelDisplay(model) {
-            const name = MODEL_NAMES[model] || model;
-            document.getElementById('currentModelDisplay').textContent = 'Модель: ' + name;
         }
         
         // ===== ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ =====
@@ -478,8 +402,9 @@
                     headers: { 'Authorization': 'Bearer ' + API_KEY }
                 });
                 if (response.ok) {
+                    const data = await response.json();
                     statusEl.className = 'api-status ok';
-                    statusEl.textContent = '✅ Alem.Cloud подключен';
+                    statusEl.textContent = '✅ Alem.Cloud подключен • ' + data.data.length + ' моделей';
                 } else {
                     throw new Error('HTTP ' + response.status);
                 }
@@ -526,7 +451,7 @@
             recognition.onerror = function(event) {
                 console.error('Speech error:', event.error);
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    showError('️ Ошибка: ' + event.error);
+                    showError('⚠️ Ошибка: ' + event.error);
                 }
             };
             
@@ -602,7 +527,7 @@
             
             if (isRecording) {
                 micButton.classList.add('listening');
-                micButton.textContent = '️';
+                micButton.textContent = '⏹️';
                 status.textContent = currentDirection === 'listen' ? 'Слушаю...' : 'Запись...';
                 indicator.classList.add('active');
             } else {
@@ -622,13 +547,13 @@
             
             showLoading(true);
             hideError();
-            document.getElementById('fileRecognizedText').textContent = ' Распознаю речь...';
+            document.getElementById('fileRecognizedText').textContent = '⏳ Распознаю речь...';
             document.getElementById('fileTranslatedText').textContent = '...';
             
             try {
                 const formData = new FormData();
                 formData.append('file', file);
-                formData.append('model', MODELS.whisper);
+                formData.append('model', WHISPER_MODEL);
                 
                 let whisperLang = 'zh';
                 if (fileLanguage === 'en-US') whisperLang = 'en';
@@ -655,7 +580,7 @@
                 await translateText(transcript, 'file');
                 
             } catch (error) {
-                showError('❌ Ошибка: ' + error.message);
+                showError(' Ошибка: ' + error.message);
             } finally {
                 showLoading(false);
             }
@@ -670,7 +595,6 @@
             
             try {
                 let prompt, targetLang;
-                const model = mode === 'live' ? currentModel : fileModel;
                 const lang = mode === 'live' ? currentLanguage : fileLanguage;
                 const direction = mode === 'live' ? currentDirection : 'listen';
                 
@@ -684,7 +608,7 @@
                     targetLang = lang;
                 }
                 
-                console.log(' Перевод с моделью:', MODEL_NAMES[model] || model);
+                console.log('🔄 Перевод через all-models...');
                 
                 const response = await fetch(API_BASE_URL + '/chat/completions', {
                     method: 'POST',
@@ -693,7 +617,7 @@
                         'Authorization': 'Bearer ' + API_KEY
                     },
                     body: JSON.stringify({
-                        model: model,
+                        model: TRANSLATE_MODEL,
                         messages: [
                             { role: 'system', content: prompt },
                             { role: 'user', content: text }
@@ -736,7 +660,7 @@
                     ? 'Русский' 
                     : (lang === 'zh-CN' ? 'Китайский' : 'Английский');
                 
-                addToHistory(text, translation, sourceLangName, targetLangName, mode, model);
+                addToHistory(text, translation, sourceLangName, targetLangName, mode);
                 
             } catch (error) {
                 console.error('Translation error:', error);
@@ -749,7 +673,7 @@
         // ===== ОЗВУЧКА =====
         function speakNow(text, lang) {
             if (!text || !('speechSynthesis' in window)) {
-                showError(' Озвучка недоступна');
+                showError('⚠️ Озвучка недоступна');
                 return;
             }
             
@@ -760,7 +684,7 @@
             utterance.volume = 1.0;
             
             utterance.onstart = function() {
-                console.log(' Озвучка началась');
+                console.log('🔊 Озвучка началась');
             };
             utterance.onerror = function(e) {
                 console.error('Озвучка ошибка:', e);
@@ -771,7 +695,7 @@
         }
         
         // ===== ИСТОРИЯ =====
-        function addToHistory(original, translation, sourceLang, targetLang, mode, model) {
+        function addToHistory(original, translation, sourceLang, targetLang, mode) {
             const item = {
                 id: Date.now(),
                 original: original,
@@ -779,7 +703,6 @@
                 sourceLang: sourceLang,
                 targetLang: targetLang,
                 mode: mode === 'live' ? 'Запись' : 'Файл',
-                model: MODEL_NAMES[model] || model,
                 timestamp: new Date().toLocaleString('ru-RU')
             };
             history.unshift(item);
