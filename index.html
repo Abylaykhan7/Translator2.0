@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Аудио Переводчик PRO</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -22,122 +21,66 @@
             padding: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        h1 { text-align: center; color: #667eea; margin-bottom: 5px; font-size: 22px; }
-        .subtitle { text-align: center; color: #666; font-size: 11px; margin-bottom: 15px; }
+        h1 { text-align: center; color: #667eea; margin-bottom: 10px; font-size: 22px; }
+        .subtitle { text-align: center; color: #666; font-size: 12px; margin-bottom: 20px; }
         .api-status { text-align: center; padding: 8px; border-radius: 8px; font-size: 12px; margin-bottom: 15px; }
         .api-status.ok { background: #e8f5e9; color: #2e7d32; }
         .api-status.error { background: #ffebee; color: #c62828; }
-        .api-status.loading { background: #fff3e0; color: #e65100; }
-        
         .direction-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .dir-btn {
-            flex: 1; padding: 12px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 10px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-            text-align: center;
-        }
+        .dir-btn { flex: 1; padding: 12px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .dir-btn.active { background: #667eea; color: white; }
-        
         .mode-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .mode-tab {
-            flex: 1; padding: 10px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 8px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-            text-align: center;
-        }
+        .mode-tab { flex: 1; padding: 10px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .mode-tab.active { background: #667eea; color: white; }
-        
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
-        .hint-box {
-            background: #fff3e0; border-left: 4px solid #ff9800;
-            padding: 10px; border-radius: 8px; margin-bottom: 12px;
-            font-size: 12px; color: #e65100;
-        }
-        
         .selector-group { margin-bottom: 12px; }
         .selector-label { font-size: 12px; color: #666; margin-bottom: 5px; font-weight: bold; }
         .selector-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .sel-btn {
-            flex: 1; min-width: 80px; padding: 10px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 8px;
-            font-size: 11px; font-weight: bold; cursor: pointer;
-            text-align: center;
-        }
+        .sel-btn { flex: 1; min-width: 80px; padding: 10px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .sel-btn.active { background: #667eea; color: white; }
-        
-        .recording-indicator {
-            display: none; text-align: center; padding: 8px;
-            background: #ffebee; border-radius: 8px; margin-bottom: 10px;
-            color: #c62828; font-size: 12px;
-        }
-        .recording-indicator.active { display: block; }
-        
-        .text-box {
-            background: #f5f5f5; border-radius: 10px; padding: 15px;
-            margin-bottom: 12px; min-height: 70px; max-height: 150px; overflow-y: auto;
-        }
+        .text-box { background: #f5f5f5; border-radius: 10px; padding: 15px; margin-bottom: 12px; min-height: 70px; max-height: 150px; overflow-y: auto; }
         .text-box h3 { font-size: 12px; color: #666; margin-bottom: 8px; }
-        .text-box p { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+        .text-box p { font-size: 14px; line-height: 1.5; }
         .translation-box { background: #e8f5e9; }
-        
-        .duration { text-align: center; font-size: 20px; font-weight: bold; color: #f44336; margin: 10px 0; }
-        
-        .mic-button {
-            width: 90px; height: 90px; border-radius: 50%; border: none;
-            background: #4CAF50; color: white; font-size: 36px; cursor: pointer;
-            display: block; margin: 20px auto;
-            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
-        }
-        .mic-button.listening {
-            background: #f44336;
-            box-shadow: 0 5px 20px rgba(244, 67, 54, 0.4);
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .upload-area {
-            border: 2px dashed #667eea; border-radius: 10px; padding: 20px;
-            text-align: center; margin: 15px 0; cursor: pointer;
-        }
+        .mic-button { width: 90px; height: 90px; border-radius: 50%; border: none; background: #4CAF50; color: white; font-size: 36px; cursor: pointer; display: block; margin: 20px auto; }
+        .mic-button.listening { background: #f44336; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } }
+        .upload-area { border: 2px dashed #667eea; border-radius: 10px; padding: 20px; text-align: center; margin: 15px 0; cursor: pointer; }
         .upload-area:active { background: #f0f0f0; }
         .upload-icon { font-size: 36px; margin-bottom: 8px; }
         .upload-text { color: #666; font-size: 13px; }
         #fileInput { display: none; }
-        
         .status { text-align: center; color: #666; font-size: 13px; margin-top: 10px; }
-        .error {
-            background: #ffebee; color: #c62828; padding: 10px;
-            border-radius: 8px; margin-top: 10px; font-size: 13px; display: none;
-        }
+        .error { background: #ffebee; color: #c62828; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 13px; display: none; }
         .loading { text-align: center; color: #667eea; font-size: 13px; margin-top: 10px; display: none; }
-        
+        .duration { text-align: center; font-size: 20px; font-weight: bold; color: #f44336; margin: 10px 0; }
+        .hint-box { background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; color: #e65100; }
         .history-section { margin-top: 15px; }
-        .history-item {
-            background: #f5f5f5; border-radius: 10px; padding: 12px;
-            margin-bottom: 8px; cursor: pointer;
-        }
+        .history-item { background: #f5f5f5; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
         .history-item:active { background: #e0e0e0; }
         .history-item h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
         .history-item p { font-size: 12px; margin-bottom: 4px; }
         .history-item .translation { color: #2e7d32; }
-        
-        .clear-btn {
-            background: #f44336; color: white; border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer;
-            font-size: 13px; margin-top: 10px; width: 100%;
+        .clear-btn { background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 10px; width: 100%; }
+        .recording-indicator { display: none; text-align: center; padding: 8px; background: #ffebee; border-radius: 8px; margin-bottom: 10px; color: #c62828; font-size: 12px; }
+        .recording-indicator.active { display: block; }
+        .voice-control { display: flex; gap: 10px; margin-top: 10px; }
+        .voice-btn {
+            flex: 1; padding: 12px; border: 2px solid #667eea; 
+            background: white; color: #667eea; border-radius: 10px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
         }
+        .voice-btn.active { background: #667eea; color: white; }
+        .voice-status { text-align: center; color: #666; font-size: 13px; margin-top: 5px; }
+        .file-error { background: #ffebee; color: #c62828; padding: 8px; border-radius: 8px; margin-top: 10px; font-size: 12px; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌍 Аудио Переводчик PRO</h1>
         <p class="subtitle">Alem.Cloud • Kimi / GPT-OSS / DeepSeek</p>
-        <div class="api-status loading" id="apiStatus">🔌 Проверка подключения...</div>
+        <div class="api-status" id="apiStatus">🔌 Проверка подключения...</div>
         
         <div class="direction-selector">
             <button class="dir-btn active" id="dirListen">👂 Слушать<br><small>Их → Русский</small></button>
@@ -146,8 +89,8 @@
         
         <div class="mode-tabs">
             <button class="mode-tab active" id="modeLive">🎙️ Запись</button>
-            <button class="mode-tab" id="modeUpload"> Файл</button>
-            <button class="mode-tab" id="modeHistory"> История</button>
+            <button class="mode-tab" id="modeUpload">📁 Файл</button>
+            <button class="mode-tab" id="modeHistory">📜 История</button>
         </div>
         
         <!-- Режим записи -->
@@ -183,6 +126,11 @@
                 <p id="translatedText">Перевод появится здесь...</p>
             </div>
             
+            <div class="voice-control">
+                <button class="voice-btn" id="speakButton">🔊 Озвучить</button>
+                <div class="voice-status" id="voiceStatus">Готов к озвучке</div>
+            </div>
+            
             <div class="duration" id="duration">00:00</div>
             
             <button class="mic-button" id="micButton">🎤</button>
@@ -195,7 +143,7 @@
                 <div class="selector-label">Язык аудио:</div>
                 <div class="selector-buttons">
                     <button class="sel-btn active" id="fileLangZh">🇨 Китайский</button>
-                    <button class="sel-btn" id="fileLangEn">🇧 Английский</button>
+                    <button class="sel-btn" id="fileLangEn">🇬 Английский</button>
                     <button class="sel-btn" id="fileLangRu">🇷🇺 Русский</button>
                 </div>
             </div>
@@ -224,6 +172,11 @@
                 <h3>Перевод:</h3>
                 <p id="fileTranslatedText">Перевод появится здесь...</p>
             </div>
+            
+            <div class="voice-control">
+                <button class="voice-btn" id="fileSpeakButton">🔊 Озвучить файл</button>
+                <div class="voice-status" id="fileVoiceStatus">Готов к озвучке</div>
+            </div>
         </div>
         
         <!-- История -->
@@ -236,6 +189,7 @@
         
         <div class="loading" id="loading"> Обработка...</div>
         <div class="error" id="error"></div>
+        <div class="file-error" id="fileError">⚠️ Поддерживаемые форматы: MP3, WAV, M4A (макс. 25MB)</div>
     </div>
 
     <script>
@@ -245,7 +199,7 @@
         
         // Модели из Alem.Cloud
         const MODELS = {
-            kimi: 'moonshotai/Kimi-K2.6',
+            kimi: 'moonshotai/Kimi-K2-Thinking',
             gpt: 'openai/gpt-oss-120b',
             deep: 'deepseek-ai/DeepSeek-V4-Pro',
             whisper: 'openai/whisper-large-v3-turbo'
@@ -264,6 +218,7 @@
         let durationInterval = null;
         let finalTranscript = '';
         let history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+        let isVoiceActive = false;
         
         // ===== ИНИЦИАЛИЗАЦИЯ =====
         window.addEventListener('load', function() {
@@ -407,7 +362,13 @@
             });
             document.getElementById('fileInput').addEventListener('change', function(e) {
                 const file = e.target.files[0];
-                if (file) handleFileUpload(file);
+                if (file) {
+                    if (file.size > 25 * 1024 * 1024) {
+                        showError('Файл слишком большой (макс. 25MB)');
+                        return;
+                    }
+                    handleFileUpload(file);
+                }
             });
             
             // Очистка истории
@@ -417,6 +378,33 @@
                     history = [];
                     localStorage.removeItem('translationHistory');
                     renderHistory();
+                }
+            });
+            
+            // Кнопки озвучки
+            document.getElementById('speakButton').addEventListener('click', function() {
+                const text = document.getElementById('translatedText').textContent;
+                if (text && text.trim() !== '') {
+                    speakText(text, 'ru-RU');
+                    document.getElementById('voiceStatus').textContent = 'Озвучено!';
+                    setTimeout(() => {
+                        document.getElementById('voiceStatus').textContent = 'Готов к озвучке';
+                    }, 2000);
+                } else {
+                    showError('Нет текста для озвучки');
+                }
+            });
+            
+            document.getElementById('fileSpeakButton').addEventListener('click', function() {
+                const text = document.getElementById('fileTranslatedText').textContent;
+                if (text && text.trim() !== '') {
+                    speakText(text, 'ru-RU');
+                    document.getElementById('fileVoiceStatus').textContent = 'Озвучено!';
+                    setTimeout(() => {
+                        document.getElementById('fileVoiceStatus').textContent = 'Готов к озвучке';
+                    }, 2000);
+                } else {
+                    showError('Нет текста для озвучки');
                 }
             });
         }
@@ -592,11 +580,11 @@
             if (isRecording) {
                 micButton.classList.add('listening');
                 micButton.textContent = '⏹️';
-                status.textContent = currentDirection === 'listen' ? 'Слушаю их...' : 'Слушаю вас...';
+                status.textContent = currentDirection === 'listen' ? 'Слушаю...' : 'Слушаю вас...';
                 indicator.classList.add('active');
             } else {
                 micButton.classList.remove('listening');
-                micButton.textContent = '';
+                micButton.textContent = '🎤';
                 status.textContent = 'Готов к работе';
                 indicator.classList.remove('active');
             }
@@ -669,7 +657,7 @@
                     targetLang = 'ru-RU';
                 } else {
                     const targetLangName = lang === 'zh-CN' ? 'Chinese' : 'English';
-                    prompt = 'You are a professional translator. Translate the following Russian text to natural, conversational ' + targetLangName + '. Return ONLY the translation, nothing else. No explanations, no quotes.';
+                    prompt = 'You are a professional translator. Translate the following Russian text to natural ' + targetLangName + '. Return ONLY the translation, nothing else. No explanations, no quotes.';
                     targetLang = lang;
                 }
                 
@@ -693,8 +681,6 @@
                     })
                 });
                 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     const errorData = await response.json().catch(function() { return {}; });
                     throw new Error(errorData.error ? errorData.error.message : 'HTTP ' + response.status);
@@ -709,9 +695,6 @@
                     ? document.getElementById('translatedText') 
                     : document.getElementById('fileTranslatedText');
                 textElement.textContent = translation;
-                
-                // Озвучка перевода
-                speakText(translation, targetLang);
                 
                 // Сохранение в историю
                 const sourceLangName = direction === 'listen' 
@@ -733,14 +716,43 @@
         
         // ===== ОЗВУЧКА =====
         function speakText(text, lang) {
-            if (!('speechSynthesis' in window)) return;
+            if (!('speechSynthesis' in window)) {
+                showError('❌ Текстовая озвучка недоступна на этом устройстве');
+                return;
+            }
+            
+            // Проверка поддержки языка
+            const supportedLanguages = ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-PT', 'nl-NL', 'ja-JP', 'zh-CN', 'zh-TW'];
+            const normalizedLang = lang.replace(/_/g, '-');
+            
+            if (!supportedLanguages.includes(normalizedLang)) {
+                console.warn(`Language ${lang} not supported. Falling back to 'en-US'`);
+                lang = 'en-US';
+            }
             
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = lang;
             utterance.rate = lang.startsWith('zh') ? 0.8 : 0.9;
             utterance.volume = 1.0;
-            window.speechSynthesis.speak(utterance);
+            
+            // Для iOS Safari требуется явное взаимодействие
+            if (navigator.userAgent.includes('iPhone') && navigator.userAgent.includes('Safari')) {
+                utterance.onend = function() {
+                    isVoiceActive = false;
+                };
+                utterance.onstart = function() {
+                    isVoiceActive = true;
+                };
+                document.addEventListener('click', function() {
+                    if (!isVoiceActive) {
+                        window.speechSynthesis.speak(utterance);
+                    }
+                    document.removeEventListener('click', arguments.callee);
+                }, { once: true });
+            } else {
+                window.speechSynthesis.speak(utterance);
+            }
         }
         
         // ===== ИСТОРИЯ =====
