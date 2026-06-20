@@ -241,22 +241,9 @@
         const API_KEY = 'sk-e8s2eOPoLT-yIP4qvbspHA';
         const API_BASE_URL = 'https://llm.nitec.kz/v1';
         
-        // ВАЖНО: используем all-models (универсальный алиас)
-        const TRANSLATE_MODEL = 'all-models';
-        const WHISPER_MODEL = 'openai/whisper-large-v3-turbo';
-        
-        // Состояние приложения
-        let currentLanguage = 'zh-CN';
-        let currentDirection = 'listen';
-        let fileLanguage = 'zh-CN';
-        let isRecording = false;
-        let recognition = null;
-        let recordingStartTime = null;
-        let durationInterval = null;
-        let finalTranscript = '';
-        let lastTranslation = '';
-        let lastTranslationLang = 'ru-RU';
-        let history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+        // ВАЖНО: сначала получаем список моделей, чтобы знать, какую использовать
+        let availableModels = [];
+        let currentModel = 'all-models'; // Предполагаем, что это доступная модель
         
         // ===== ИНИЦИАЛИЗАЦИЯ =====
         window.addEventListener('load', function() {
@@ -266,6 +253,40 @@
             checkApiConnection();
             console.log('✅ App initialized');
         });
+        
+        // ===== ПРОВЕРКА ПОДКЛЮЧЕНИЯ К API =====
+        async function checkApiConnection() {
+            const statusEl = document.getElementById('apiStatus');
+            try {
+                // Сначала получаем список доступных моделей
+                const modelsResponse = await fetch(API_BASE_URL + '/models', {
+                    headers: { 'Authorization': 'Bearer ' + API_KEY }
+                });
+                
+                if (!modelsResponse.ok) {
+                    throw new Error('HTTP ' + modelsResponse.status);
+                }
+                
+                const modelsData = await modelsResponse.json();
+                availableModels = modelsData.data || [];
+                
+                // Если есть модели, выбираем первую доступную
+                if (availableModels.length > 0) {
+                    currentModel = availableModels[0].id;
+                    document.getElementById('currentModelDisplay').textContent = 
+                        'Модель: ' + currentModel;
+                    
+                    statusEl.className = 'api-status ok';
+                    statusEl.textContent = '✅ Alem.Cloud подключен • Модель: ' + currentModel;
+                } else {
+                    statusEl.className = 'api-status error';
+                    statusEl.textContent = '❌ Нет доступных моделей. Проверьте API ключ.';
+                }
+            } catch (e) {
+                statusEl.className = 'api-status error';
+                statusEl.textContent = '❌ Ошибка: ' + e.message;
+            }
+        }
         
         // ===== НАСТРОЙКА КНОПОК =====
         function setupButtons() {
@@ -390,63 +411,6 @@
                 hintBox.innerHTML = '💡 Вы говорите по-русски → Они слышат ' + langName;
                 sourceLabel.textContent = 'Распознанный текст (Русский):';
                 targetLabel.textContent = 'Перевод (' + (currentLanguage === 'zh-CN' ? 'Китайский' : 'Английский') + '):';
-            }
-        }
-        
-        // ===== ПРОВЕРКА API =====
-        async function checkApiConnection() {
-            const statusEl = document.getElementById('apiStatus');
-            try {
-                // Сначала проверяем, доступны ли модели
-                const modelsResponse = await fetch(API_BASE_URL + '/models', {
-                    headers: { 'Authorization': 'Bearer ' + API_KEY }
-                });
-                
-                if (!modelsResponse.ok) {
-                    throw new Error('HTTP ' + modelsResponse.status);
-                }
-                
-                const modelsData = await modelsResponse.json();
-                const availableModels = modelsData.data || [];
-                
-                if (availableModels.length > 0) {
-                    // Используем первую доступную модель
-                    const firstModel = availableModels[0].id;
-                    document.getElementById('currentModelDisplay').textContent = 'Модель: ' + firstModel;
-                    
-                    // Проверяем, может ли эта модель быть использована для перевода
-                    const testPrompt = "Привет! Какая сегодня погода?";
-                    const testResponse = await fetch(API_BASE_URL + '/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + API_KEY
-                        },
-                        body: JSON.stringify({
-                            model: firstModel,
-                            messages: [
-                                { role: 'system', content: "Вы профессиональный переводчик. Переведите текст на русский язык. Возвращайте только перевод, без дополнительных слов." },
-                                { role: 'user', content: testPrompt }
-                            ],
-                            temperature: 0.3,
-                            max_tokens: 100
-                        })
-                    });
-                    
-                    if (testResponse.ok) {
-                        statusEl.className = 'api-status ok';
-                        statusEl.textContent = '✅ Alem.Cloud подключен • Модель: ' + firstModel;
-                    } else {
-                        statusEl.className = 'api-status error';
-                        statusEl.textContent = '❌ Модель недоступна для перевода. Попробуйте позже.';
-                    }
-                } else {
-                    statusEl.className = 'api-status error';
-                    statusEl.textContent = '❌ Нет доступных моделей. Проверьте API ключ.';
-                }
-            } catch (e) {
-                statusEl.className = 'api-status error';
-                statusEl.textContent = '❌ Ошибка: ' + e.message;
             }
         }
         
@@ -589,7 +553,7 @@
             try {
                 const formData = new FormData();
                 formData.append('file', file);
-                formData.append('model', WHISPER_MODEL);
+                formData.append('model', 'openai/whisper-large-v3-turbo');
                 
                 let whisperLang = 'zh';
                 if (fileLanguage === 'en-US') whisperLang = 'en';
@@ -644,7 +608,7 @@
                     targetLang = lang;
                 }
                 
-                console.log('🔄 Перевод через модель:', TRANSLATE_MODEL);
+                console.log('🔄 Перевод через модель:', currentModel);
                 
                 const response = await fetch(API_BASE_URL + '/chat/completions', {
                     method: 'POST',
@@ -653,7 +617,7 @@
                         'Authorization': 'Bearer ' + API_KEY
                     },
                     body: JSON.stringify({
-                        model: TRANSLATE_MODEL,
+                        model: currentModel,
                         messages: [
                             { role: 'system', content: prompt },
                             { role: 'user', content: text }
@@ -667,7 +631,7 @@
                 if (!response.ok) {
                     const errorData = await response.json().catch(function() { return {}; });
                     
-                    // Обработка конкретных ошибок
+                    // Обработка ошибок
                     if (response.status === 401) {
                         showError('❌ Неверный API ключ. Проверьте ключ.');
                     } else if (response.status === 403) {
