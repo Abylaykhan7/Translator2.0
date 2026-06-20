@@ -149,7 +149,7 @@
         <h1> Аудио Переводчик PRO</h1>
         <p class="subtitle">Alem.Cloud • Автоматический выбор модели</p>
         <div class="api-status loading" id="apiStatus">🔌 Проверка подключения...</div>
-        <div class="current-model" id="currentModelDisplay">Модель: all-models (авто)</div>
+        <div class="current-model" id="currentModelDisplay">Модель: Загрузка...</div>
         
         <div class="direction-selector">
             <button class="dir-btn active" id="dirListen">👂 Слушать<br><small>Их → Русский</small></button>
@@ -242,7 +242,6 @@
         const API_BASE_URL = 'https://llm.nitec.kz/v1';
         
         // ВАЖНО: используем all-models (универсальный алиас)
-        // Твой API ключ имеет доступ только к этой модели
         const TRANSLATE_MODEL = 'all-models';
         const WHISPER_MODEL = 'openai/whisper-large-v3-turbo';
         
@@ -398,15 +397,52 @@
         async function checkApiConnection() {
             const statusEl = document.getElementById('apiStatus');
             try {
-                const response = await fetch(API_BASE_URL + '/models', {
+                // Сначала проверяем, доступны ли модели
+                const modelsResponse = await fetch(API_BASE_URL + '/models', {
                     headers: { 'Authorization': 'Bearer ' + API_KEY }
                 });
-                if (response.ok) {
-                    const data = await response.json();
-                    statusEl.className = 'api-status ok';
-                    statusEl.textContent = '✅ Alem.Cloud подключен • ' + data.data.length + ' моделей';
+                
+                if (!modelsResponse.ok) {
+                    throw new Error('HTTP ' + modelsResponse.status);
+                }
+                
+                const modelsData = await modelsResponse.json();
+                const availableModels = modelsData.data || [];
+                
+                if (availableModels.length > 0) {
+                    // Используем первую доступную модель
+                    const firstModel = availableModels[0].id;
+                    document.getElementById('currentModelDisplay').textContent = 'Модель: ' + firstModel;
+                    
+                    // Проверяем, может ли эта модель быть использована для перевода
+                    const testPrompt = "Привет! Какая сегодня погода?";
+                    const testResponse = await fetch(API_BASE_URL + '/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + API_KEY
+                        },
+                        body: JSON.stringify({
+                            model: firstModel,
+                            messages: [
+                                { role: 'system', content: "Вы профессиональный переводчик. Переведите текст на русский язык. Возвращайте только перевод, без дополнительных слов." },
+                                { role: 'user', content: testPrompt }
+                            ],
+                            temperature: 0.3,
+                            max_tokens: 100
+                        })
+                    });
+                    
+                    if (testResponse.ok) {
+                        statusEl.className = 'api-status ok';
+                        statusEl.textContent = '✅ Alem.Cloud подключен • Модель: ' + firstModel;
+                    } else {
+                        statusEl.className = 'api-status error';
+                        statusEl.textContent = '❌ Модель недоступна для перевода. Попробуйте позже.';
+                    }
                 } else {
-                    throw new Error('HTTP ' + response.status);
+                    statusEl.className = 'api-status error';
+                    statusEl.textContent = '❌ Нет доступных моделей. Проверьте API ключ.';
                 }
             } catch (e) {
                 statusEl.className = 'api-status error';
@@ -580,7 +616,7 @@
                 await translateText(transcript, 'file');
                 
             } catch (error) {
-                showError(' Ошибка: ' + error.message);
+                showError('❌ Ошибка: ' + error.message);
             } finally {
                 showLoading(false);
             }
@@ -608,7 +644,7 @@
                     targetLang = lang;
                 }
                 
-                console.log('🔄 Перевод через all-models...');
+                console.log('🔄 Перевод через модель:', TRANSLATE_MODEL);
                 
                 const response = await fetch(API_BASE_URL + '/chat/completions', {
                     method: 'POST',
@@ -623,13 +659,25 @@
                             { role: 'user', content: text }
                         ],
                         temperature: 0.3,
-                        max_tokens: 1000
+                        max_tokens: 1000,
+                        top_p: 0.9
                     })
                 });
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(function() { return {}; });
-                    throw new Error(errorData.error ? errorData.error.message : 'HTTP ' + response.status);
+                    
+                    // Обработка конкретных ошибок
+                    if (response.status === 401) {
+                        showError('❌ Неверный API ключ. Проверьте ключ.');
+                    } else if (response.status === 403) {
+                        showError('❌ Доступ запрещен. Возможно, превышен лимит запросов.');
+                    } else if (response.status === 429) {
+                        showError('❌ Превышен лимит запросов. Попробуйте позже.');
+                    } else {
+                        showError('❌ Ошибка перевода: ' + (errorData.error ? errorData.error.message : 'HTTP ' + response.status));
+                    }
+                    return;
                 }
                 
                 const data = await response.json();
