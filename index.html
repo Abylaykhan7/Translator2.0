@@ -4,270 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Аудио Переводчик PRO</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        h1 { text-align: center; color: #667eea; margin-bottom: 5px; font-size: 22px; }
-        .subtitle { text-align: center; color: #666; font-size: 11px; margin-bottom: 15px; }
-        .api-status { text-align: center; padding: 8px; border-radius: 8px; font-size: 12px; margin-bottom: 15px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border-radius: 20px; padding: 20px; }
+        h1 { text-align: center; color: #667eea; margin-bottom: 10px; }
+        .api-status { text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
         .api-status.ok { background: #e8f5e9; color: #2e7d32; }
         .api-status.error { background: #ffebee; color: #c62828; }
-        .api-status.loading { background: #fff3e0; color: #e65100; }
-        
-        .direction-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .dir-btn {
-            flex: 1; padding: 12px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 10px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-        }
+        .dir-btn { width: 48%; padding: 12px; margin: 1%; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .dir-btn.active { background: #667eea; color: white; }
-        
-        .mode-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .mode-tab {
-            flex: 1; padding: 10px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 8px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-        }
-        .mode-tab.active { background: #667eea; color: white; }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        .selector-group { margin-bottom: 12px; }
-        .selector-label { font-size: 12px; color: #666; margin-bottom: 5px; font-weight: bold; }
-        .selector-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .sel-btn {
-            flex: 1; min-width: 80px; padding: 10px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 8px;
-            font-size: 11px; font-weight: bold; cursor: pointer;
-        }
-        .sel-btn.active { background: #667eea; color: white; }
-        
-        .recording-indicator {
-            display: none; text-align: center; padding: 8px;
-            background: #ffebee; border-radius: 8px; margin-bottom: 10px;
-            color: #c62828; font-size: 12px;
-        }
-        .recording-indicator.active { display: block; }
-        
-        .text-box {
-            background: #f5f5f5; border-radius: 10px; padding: 15px;
-            margin-bottom: 12px; min-height: 70px; max-height: 150px; overflow-y: auto;
-        }
-        .text-box h3 { font-size: 12px; color: #666; margin-bottom: 8px; }
-        .text-box p { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
-        .translation-box { background: #e8f5e9; }
-        
-        .duration { text-align: center; font-size: 20px; font-weight: bold; color: #f44336; margin: 10px 0; }
-        
-        .mic-button {
-            width: 90px; height: 90px; border-radius: 50%; border: none;
-            background: #4CAF50; color: white; font-size: 36px; cursor: pointer;
-            display: block; margin: 20px auto;
-            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
-        }
-        .mic-button.listening {
-            background: #f44336;
-            box-shadow: 0 5px 20px rgba(244, 67, 54, 0.4);
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .upload-area {
-            border: 2px dashed #667eea; border-radius: 10px; padding: 20px;
-            text-align: center; margin: 15px 0; cursor: pointer;
-        }
-        .upload-area:active { background: #f0f0f0; }
-        .upload-icon { font-size: 36px; margin-bottom: 8px; }
-        .upload-text { color: #666; font-size: 13px; }
-        #fileInput { display: none; }
-        
-        .status { text-align: center; color: #666; font-size: 13px; margin-top: 10px; }
-        .error {
-            background: #ffebee; color: #c62828; padding: 10px;
-            border-radius: 8px; margin-top: 10px; font-size: 13px; display: none;
-        }
-        .loading { text-align: center; color: #667eea; font-size: 13px; margin-top: 10px; display: none; }
-        
-        .history-section { margin-top: 15px; }
-        .history-item {
-            background: #f5f5f5; border-radius: 10px; padding: 12px;
-            margin-bottom: 8px; cursor: pointer;
-        }
-        .history-item:active { background: #e0e0e0; }
-        .history-item h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
-        .history-item p { font-size: 12px; margin-bottom: 4px; }
-        .history-item .translation { color: #2e7d32; }
-        
-        .clear-btn {
-            background: #f44336; color: white; border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer;
-            font-size: 13px; margin-top: 10px; width: 100%;
-        }
-        
-        .voice-btn {
-            width: 100%; padding: 12px; border: 2px solid #667eea;
-            background: white; color: #667eea; border-radius: 10px;
-            font-size: 14px; font-weight: bold; cursor: pointer;
-            margin-top: 10px;
-        }
+        .model-select { margin: 15px 0; }
+        .model-label { font-size: 12px; color: #666; margin-bottom: 8px; font-weight: bold; }
+        .model-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+        .model-btn { flex: 1; min-width: 100px; padding: 10px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .model-btn.active { background: #667eea; color: white; }
+        .mic-btn { width: 90px; height: 90px; border-radius: 50%; border: none; background: #4CAF50; color: white; font-size: 36px; display: block; margin: 20px auto; cursor: pointer; }
+        .mic-btn.listening { background: #f44336; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .text-box { background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 10px 0; min-height: 60px; }
+        .text-box h3 { font-size: 12px; color: #666; margin-bottom: 5px; }
+        .error { background: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; margin: 10px 0; display: none; }
+        .loading { text-align: center; color: #667eea; padding: 10px; display: none; font-weight: bold; }
+        .lang-select { display: flex; gap: 10px; margin: 10px 0; }
+        .lang-btn { flex: 1; padding: 10px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .lang-btn.active { background: #667eea; color: white; }
+        .hint { background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: #e65100; }
+        .voice-btn { width: 100%; padding: 12px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .voice-btn:active { background: #667eea; color: white; }
-        
-        .hint-box {
-            background: #fff3e0; border-left: 4px solid #ff9800;
-            padding: 10px; border-radius: 8px; margin-bottom: 15px;
-            font-size: 12px; color: #e65100;
-        }
+        .current-model { text-align: center; padding: 8px; background: #e3f2fd; border-radius: 8px; margin-bottom: 10px; font-size: 12px; color: #1565c0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1> Аудио Переводчик PRO</h1>
-        <p class="subtitle">Alem.Cloud • alemsgpt-intent</p>
-        <div class="api-status loading" id="apiStatus">🔌 Проверка подключения...</div>
+        <h1>🎙️ Аудио Переводчик</h1>
+        <div class="api-status" id="apiStatus">🔌 Подключение...</div>
         
-        <div class="direction-selector">
-            <button class="dir-btn active" id="dirListen"> Слушать<br><small>Их → Русский</small></button>
-            <button class="dir-btn" id="dirSpeak">🗣️ Говорить<br><small>Русский → Их</small></button>
+        <div class="current-model" id="currentModel">Модель: Kimi K2</div>
+        
+        <div class="dir-btn active" id="listenBtn" onclick="setDir('listen')">👂 Слушать (Их → Русский)</div>
+        <div class="dir-btn" id="speakBtn" onclick="setDir('speak')" style="margin-top: 5px;">🗣️ Говорить (Русский → Их)</div>
+        
+        <div class="model-select">
+            <div class="model-label">Выберите модель:</div>
+            <div class="model-buttons">
+                <button class="model-btn active" onclick="setModel('moonshotai/Kimi-K2-Thinking', this)">Kimi K2</button>
+                <button class="model-btn" onclick="setModel('openai/gpt-oss-120b', this)">GPT-OSS-120B</button>
+                <button class="model-btn" onclick="setModel('deepseek-ai/DeepSeek-V4-Pro', this)">DeepSeek V4</button>
+                <button class="model-btn" onclick="setModel('alemgpt-intent', this)">AlemGPT</button>
+            </div>
         </div>
         
-        <div class="mode-tabs">
-            <button class="mode-tab active" id="modeLive">️ Запись</button>
-            <button class="mode-tab" id="modeUpload">📁 Файл</button>
-            <button class="mode-tab" id="modeHistory">📜 История</button>
+        <div class="lang-select">
+            <button class="lang-btn active" onclick="setLang('zh-CN')">🇨🇳 Китайский</button>
+            <button class="lang-btn" onclick="setLang('en-US')">🇬🇧 Английский</button>
         </div>
         
-        <!-- Режим записи -->
-        <div class="tab-content active" id="liveMode">
-            <div class="hint-box" id="hintBox">💡 Они говорят на китайском → Вы слышите русский</div>
-            
-            <div class="selector-group">
-                <div class="selector-label">Язык собеседника:</div>
-                <div class="selector-buttons">
-                    <button class="sel-btn active" id="langZh">🇨🇳 Китайский</button>
-                    <button class="sel-btn" id="langEn">🇬🇧 Английский</button>
-                </div>
-            </div>
-            
-            <div class="recording-indicator" id="recordingIndicator">🔴 Идет запись...</div>
-            
-            <div class="text-box">
-                <h3 id="sourceLabel">Распознанный текст (Китайский):</h3>
-                <p id="recognizedText">Нажмите кнопку микрофона...</p>
-            </div>
-            
-            <div class="text-box translation-box">
-                <h3 id="targetLabel">Перевод (Русский):</h3>
-                <p id="translatedText">Перевод появится здесь...</p>
-            </div>
-            
-            <button class="voice-btn" id="speakBtn">🔊 Озвучить перевод</button>
-            
-            <div class="duration" id="duration">00:00</div>
-            
-            <button class="mic-button" id="micButton">🎤</button>
-            <div class="status" id="status">Готов к работе</div>
+        <div class="hint" id="hint">💡 Они говорят на китайском → Вы слышите русский</div>
+        
+        <div class="text-box">
+            <h3>Распознано:</h3>
+            <p id="recognized">Нажмите микрофон...</p>
         </div>
         
-        <!-- Режим файла -->
-        <div class="tab-content" id="uploadMode">
-            <div class="selector-group">
-                <div class="selector-label">Язык аудио:</div>
-                <div class="selector-buttons">
-                    <button class="sel-btn active" id="fileLangZh">🇨 Китайский</button>
-                    <button class="sel-btn" id="fileLangEn">🇬🇧 Английский</button>
-                    <button class="sel-btn" id="fileLangRu">🇷🇺 Русский</button>
-                </div>
-            </div>
-            
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Нажмите для выбора аудиофайла<br><small>MP3, WAV, M4A, OGG, WEBM (макс. 25MB)</small></div>
-            </div>
-            <input type="file" id="fileInput" accept="audio/mp3,audio/wav,audio/m4a,audio/ogg,audio/webm,audio/*">
-            
-            <div class="text-box">
-                <h3>Распознанный текст:</h3>
-                <p id="fileRecognizedText">Загрузите аудиофайл...</p>
-            </div>
-            
-            <div class="text-box translation-box">
-                <h3>Перевод:</h3>
-                <p id="fileTranslatedText">Перевод появится здесь...</p>
-            </div>
-            
-            <button class="voice-btn" id="fileSpeakBtn">🔊 Озвучить перевод</button>
+        <div class="text-box" style="background:#e8f5e9;">
+            <h3>Перевод:</h3>
+            <p id="translated">...</p>
         </div>
         
-        <!-- История -->
-        <div class="tab-content" id="historyMode">
-            <div class="history-section" id="historyList">
-                <p style="text-align: center; color: #666;">История пуста</p>
-            </div>
-            <button class="clear-btn" id="clearHistoryBtn">🗑️ Очистить историю</button>
-        </div>
+        <button class="voice-btn" onclick="speakTranslation()">🔊 Озвучить перевод</button>
         
-        <div class="loading" id="loading">⏳ Обработка...</div>
         <div class="error" id="error"></div>
+        <div class="loading" id="loading">⏳ Перевожу...</div>
+        
+        <button class="mic-btn" id="micBtn" onclick="toggle()">🎤</button>
     </div>
 
     <script>
-        // ===== НАСТРОЙКИ API =====
         const API_KEY = 'sk-e8s2eOPoLT-yIP4qvbspHA';
         const API_BASE_URL = 'https://llm.nitec.kz/v1';
-        const TRANSLATE_MODEL = 'alemgpt-intent';
-        const WHISPER_MODEL = 'openai/whisper-large-v3-turbo';
         
-        // Состояние приложения
-        let currentLanguage = 'zh-CN';
-        let currentDirection = 'listen';
-        let fileLanguage = 'zh-CN';
-        let isRecording = false;
+        let dir = 'listen';
+        let lang = 'zh-CN';
+        let currentModel = 'moonshotai/Kimi-K2-Thinking';
         let recognition = null;
-        let recordingStartTime = null;
-        let durationInterval = null;
-        let finalTranscript = '';
+        let isRecording = false;
         let lastTranslation = '';
         let lastTranslationLang = 'ru-RU';
-        let history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
         
-        // ===== ИНИЦИАЛИЗАЦИЯ =====
-        window.addEventListener('load', function() {
-            setupButtons();
-            renderHistory();
-            updateUI();
-            checkApiConnection();
-            console.log('✅ App initialized');
+        // ===== ПРОВЕРКА API ПРИ ЗАГРУЗКЕ =====
+        window.addEventListener('load', async function() {
+            await checkApiConnection();
         });
         
-        // ===== ПРОВЕРКА API =====
         async function checkApiConnection() {
             const statusEl = document.getElementById('apiStatus');
             try {
                 const response = await fetch(API_BASE_URL + '/models', {
                     headers: { 'Authorization': 'Bearer ' + API_KEY }
                 });
+                
                 if (response.ok) {
                     statusEl.className = 'api-status ok';
                     statusEl.textContent = '✅ Alem.Cloud подключен';
+                } else if (response.status === 401) {
+                    statusEl.className = 'api-status error';
+                    statusEl.textContent = '❌ Неверный API ключ';
                 } else {
                     throw new Error('HTTP ' + response.status);
                 }
@@ -277,314 +120,116 @@
             }
         }
         
-        // ===== НАСТРОЙКА КНОПОК =====
-        function setupButtons() {
-            document.getElementById('dirListen').addEventListener('click', function() {
-                currentDirection = 'listen';
-                document.getElementById('dirListen').classList.add('active');
-                document.getElementById('dirSpeak').classList.remove('active');
-                updateUI();
-                if (isRecording) stopRecording();
-            });
+        function setModel(modelName, btn) {
+            currentModel = modelName;
             
-            document.getElementById('dirSpeak').addEventListener('click', function() {
-                currentDirection = 'speak';
-                document.getElementById('dirSpeak').classList.add('active');
-                document.getElementById('dirListen').classList.remove('active');
-                updateUI();
-                if (isRecording) stopRecording();
-            });
+            // Обновляем активную кнопку
+            document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             
-            document.getElementById('modeLive').addEventListener('click', function() { setMode('live'); });
-            document.getElementById('modeUpload').addEventListener('click', function() { setMode('upload'); });
-            document.getElementById('modeHistory').addEventListener('click', function() { setMode('history'); });
+            // Обновляем отображение
+            const modelNameDisplay = modelName.split('/')[1] || modelName;
+            document.getElementById('currentModel').textContent = 'Модель: ' + modelNameDisplay;
             
-            document.getElementById('langZh').addEventListener('click', function() {
-                currentLanguage = 'zh-CN';
-                document.getElementById('langZh').classList.add('active');
-                document.getElementById('langEn').classList.remove('active');
-                updateUI();
-            });
-            document.getElementById('langEn').addEventListener('click', function() {
-                currentLanguage = 'en-US';
-                document.getElementById('langEn').classList.add('active');
-                document.getElementById('langZh').classList.remove('active');
-                updateUI();
-            });
-            
-            document.getElementById('fileLangZh').addEventListener('click', function() {
-                fileLanguage = 'zh-CN';
-                document.getElementById('fileLangZh').classList.add('active');
-                document.getElementById('fileLangEn').classList.remove('active');
-                document.getElementById('fileLangRu').classList.remove('active');
-            });
-            document.getElementById('fileLangEn').addEventListener('click', function() {
-                fileLanguage = 'en-US';
-                document.getElementById('fileLangEn').classList.add('active');
-                document.getElementById('fileLangZh').classList.remove('active');
-                document.getElementById('fileLangRu').classList.remove('active');
-            });
-            document.getElementById('fileLangRu').addEventListener('click', function() {
-                fileLanguage = 'ru-RU';
-                document.getElementById('fileLangRu').classList.add('active');
-                document.getElementById('fileLangZh').classList.remove('active');
-                document.getElementById('fileLangEn').classList.remove('active');
-            });
-            
-            document.getElementById('micButton').addEventListener('click', function() {
-                toggleRecording();
-            });
-            
-            document.getElementById('speakBtn').addEventListener('click', function() {
-                speakNow(lastTranslation, lastTranslationLang);
-            });
-            document.getElementById('fileSpeakBtn').addEventListener('click', function() {
-                const text = document.getElementById('fileTranslatedText').textContent;
-                if (text && text !== 'Перевод появится здесь...') {
-                    speakNow(text, 'ru-RU');
-                }
-            });
-            
-            document.getElementById('uploadArea').addEventListener('click', function() {
-                document.getElementById('fileInput').click();
-            });
-            document.getElementById('fileInput').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) handleFileUpload(file);
-            });
-            
-            document.getElementById('clearHistoryBtn').addEventListener('click', function() {
-                if (confirm('Очистить всю историю переводов?')) {
-                    history = [];
-                    localStorage.removeItem('translationHistory');
-                    renderHistory();
-                }
-            });
+            console.log('Model changed to:', currentModel);
         }
         
-        function setMode(mode) {
-            document.getElementById('modeLive').classList.remove('active');
-            document.getElementById('modeUpload').classList.remove('active');
-            document.getElementById('modeHistory').classList.remove('active');
-            document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+        function setDir(d) {
+            dir = d;
+            document.getElementById('listenBtn').className = 'dir-btn' + (d === 'listen' ? ' active' : '');
+            document.getElementById('speakBtn').className = 'dir-btn' + (d === 'speak' ? ' active' : '');
             
-            document.querySelectorAll('.tab-content').forEach(function(tab) {
-                tab.classList.remove('active');
-            });
-            document.getElementById(mode + 'Mode').classList.add('active');
-            
-            if (isRecording) stopRecording();
-        }
-        
-        function updateUI() {
-            const hintBox = document.getElementById('hintBox');
-            const sourceLabel = document.getElementById('sourceLabel');
-            const targetLabel = document.getElementById('targetLabel');
-            const langName = currentLanguage === 'zh-CN' ? 'китайском' : 'английском';
-            
-            if (currentDirection === 'listen') {
-                hintBox.innerHTML = '💡 Они говорят на ' + langName + ' → Вы слышите русский';
-                sourceLabel.textContent = 'Распознанный текст (' + (currentLanguage === 'zh-CN' ? 'Китайский' : 'Английский') + '):';
-                targetLabel.textContent = 'Перевод (Русский):';
+            const hintEl = document.getElementById('hint');
+            if (d === 'listen') {
+                hintEl.textContent = '💡 Они говорят на ' + (lang === 'zh-CN' ? 'китайском' : 'английском') + ' → Вы слышите русский';
             } else {
-                hintBox.innerHTML = '💡 Вы говорите по-русски → Они слышат ' + langName;
-                sourceLabel.textContent = 'Распознанный текст (Русский):';
-                targetLabel.textContent = 'Перевод (' + (currentLanguage === 'zh-CN' ? 'Китайский' : 'Английский') + '):';
+                hintEl.textContent = '💡 Вы говорите по-русски → Они слышат ' + (lang === 'zh-CN' ? 'китайский' : 'английский');
             }
         }
         
-        function initSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                showError(' Используйте Safari на iPhone');
-                return false;
+        function setLang(l) {
+            lang = l;
+            const btns = document.querySelectorAll('.lang-btn');
+            btns[0].className = 'lang-btn' + (l === 'zh-CN' ? ' active' : '');
+            btns[1].className = 'lang-btn' + (l === 'en-US' ? ' active' : '');
+            
+            const hintEl = document.getElementById('hint');
+            if (dir === 'listen') {
+                hintEl.textContent = '💡 Они говорят на ' + (l === 'zh-CN' ? 'китайском' : 'английском') + ' → Вы слышите русский';
+            } else {
+                hintEl.textContent = '💡 Вы говорите по-русски → Они слышат ' + (l === 'zh-CN' ? 'китайский' : 'английский');
             }
-            
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            
-            recognition.lang = currentDirection === 'listen' ? currentLanguage : 'ru-RU';
-            recognition.interimResults = true;
-            recognition.continuous = false;
-            recognition.maxAlternatives = 1;
-            
-            recognition.onstart = function() {
-                isRecording = true;
-                finalTranscript = '';
-                updateRecordingUI();
-                startDurationTimer();
-            };
-            
-            recognition.onresult = function(event) {
-                let interim = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interim += event.results[i][0].transcript;
-                    }
-                }
-                document.getElementById('recognizedText').textContent = finalTranscript + interim;
-            };
-            
-            recognition.onerror = function(event) {
-                console.error('Speech error:', event.error);
-                if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    showError('⚠️ Ошибка: ' + event.error);
-                }
-            };
-            
-            recognition.onend = function() {
-                stopDurationTimer();
-                isRecording = false;
-                updateRecordingUI();
-                
-                const text = finalTranscript.trim();
-                if (text) {
-                    translateText(text, 'live');
-                }
-            };
-            
-            return true;
         }
         
-        function toggleRecording() {
+        function toggle() {
             if (isRecording) {
-                stopRecording();
+                stop();
             } else {
-                startRecording();
+                start();
             }
         }
         
-        function startRecording() {
-            if (!initSpeechRecognition()) return;
-            
-            document.getElementById('recognizedText').textContent = 'Слушаю...';
-            document.getElementById('translatedText').textContent = 'Перевод появится здесь...';
-            document.getElementById('duration').textContent = '00:00';
-            hideError();
-            
-            try {
-                recognition.start();
-            } catch (e) {
-                showError(' Ошибка: ' + e.message);
-            }
-        }
-        
-        function stopRecording() {
-            if (recognition) {
-                try { recognition.stop(); } catch(e) {}
-            }
-            isRecording = false;
-            stopDurationTimer();
-            updateRecordingUI();
-        }
-        
-        function startDurationTimer() {
-            recordingStartTime = Date.now();
-            durationInterval = setInterval(updateDuration, 1000);
-        }
-        
-        function stopDurationTimer() {
-            if (durationInterval) {
-                clearInterval(durationInterval);
-                durationInterval = null;
-            }
-        }
-        
-        function updateDuration() {
-            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
-            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const seconds = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('duration').textContent = minutes + ':' + seconds;
-        }
-        
-        function updateRecordingUI() {
-            const micButton = document.getElementById('micButton');
-            const status = document.getElementById('status');
-            const indicator = document.getElementById('recordingIndicator');
-            
-            if (isRecording) {
-                micButton.classList.add('listening');
-                micButton.textContent = '⏹️';
-                status.textContent = currentDirection === 'listen' ? 'Слушаю...' : 'Запись...';
-                indicator.classList.add('active');
-            } else {
-                micButton.classList.remove('listening');
-                micButton.textContent = '🎤';
-                status.textContent = 'Готов к работе';
-                indicator.classList.remove('active');
-            }
-        }
-        
-        async function handleFileUpload(file) {
-            if (file.size > 25 * 1024 * 1024) {
-                showError('❌ Файл слишком большой (макс. 25MB)');
+        function start() {
+            if (!('webkitSpeechRecognition' in window)) {
+                showError('❌ Используйте Safari на iPhone');
                 return;
             }
             
-            showLoading(true);
-            hideError();
-            document.getElementById('fileRecognizedText').textContent = ' Распознаю речь...';
-            document.getElementById('fileTranslatedText').textContent = '...';
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = dir === 'listen' ? lang : 'ru-RU';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+            
+            recognition.onresult = function(e) {
+                const text = e.results[0][0].transcript;
+                document.getElementById('recognized').textContent = text;
+                translate(text);
+            };
+            
+            recognition.onerror = function(e) {
+                showError('⚠️ Ошибка: ' + e.error);
+            };
+            
+            recognition.onend = function() {
+                isRecording = false;
+                document.getElementById('micBtn').className = 'mic-btn';
+            };
             
             try {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('model', WHISPER_MODEL);
-                
-                let whisperLang = 'zh';
-                if (fileLanguage === 'en-US') whisperLang = 'en';
-                else if (fileLanguage === 'ru-RU') whisperLang = 'ru';
-                
-                formData.append('language', whisperLang);
-                
-                const response = await fetch(API_BASE_URL + '/audio/transcriptions', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + API_KEY },
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(function() { return {}; });
-                    throw new Error(errorData.error ? errorData.error.message : 'HTTP ' + response.status);
-                }
-                
-                const data = await response.json();
-                const transcript = data.text;
-                
-                document.getElementById('fileRecognizedText').textContent = transcript;
-                
-                await translateText(transcript, 'file');
-                
-            } catch (error) {
-                showError('❌ Ошибка: ' + error.message);
-            } finally {
-                showLoading(false);
+                recognition.start();
+                isRecording = true;
+                document.getElementById('micBtn').className = 'mic-btn listening';
+                document.getElementById('recognized').textContent = 'Слушаю...';
+            } catch (e) {
+                showError('❌ Ошибка: ' + e.message);
             }
         }
         
-        async function translateText(text, mode) {
-            if (!text.trim()) return;
-            
-            showLoading(true);
+        function stop() {
+            if (recognition) recognition.stop();
+            isRecording = false;
+            document.getElementById('micBtn').className = 'mic-btn';
+        }
+        
+        async function translate(text) {
+            document.getElementById('loading').style.display = 'block';
             hideError();
             
             try {
                 let prompt, targetLang;
-                const lang = mode === 'live' ? currentLanguage : fileLanguage;
-                const direction = mode === 'live' ? currentDirection : 'listen';
                 
-                if (direction === 'listen') {
+                if (dir === 'listen') {
                     const sourceLang = lang === 'zh-CN' ? 'Chinese' : 'English';
-                    prompt = 'You are a professional translator. Translate the following ' + sourceLang + ' text to natural Russian. Return ONLY the translation, nothing else. No explanations, no quotes.';
+                    prompt = 'You are a professional translator. Translate the following ' + sourceLang + ' text to natural Russian. Return ONLY the translation, nothing else.';
                     targetLang = 'ru-RU';
                 } else {
                     const targetLangName = lang === 'zh-CN' ? 'Chinese' : 'English';
-                    prompt = 'You are a professional translator. Translate the following Russian text to natural, conversational ' + targetLangName + '. Return ONLY the translation, nothing else. No explanations, no quotes.';
+                    prompt = 'You are a professional translator. Translate the following Russian text to natural ' + targetLangName + '. Return ONLY the translation, nothing else.';
                     targetLang = lang;
                 }
                 
-                console.log('🔄 Перевод через модель:', TRANSLATE_MODEL);
+                console.log('🔄 Модель:', currentModel);
+                console.log('📝 Текст:', text);
                 
                 const response = await fetch(API_BASE_URL + '/chat/completions', {
                     method: 'POST',
@@ -593,153 +238,61 @@
                         'Authorization': 'Bearer ' + API_KEY
                     },
                     body: JSON.stringify({
-                        model: TRANSLATE_MODEL,
+                        model: currentModel,
                         messages: [
                             { role: 'system', content: prompt },
                             { role: 'user', content: text }
                         ],
                         temperature: 0.3,
-                        max_tokens: 1000
+                        max_tokens: 500
                     })
                 });
                 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(function() { return {}; });
-                    
-                    if (response.status === 401) {
-                        showError('❌ Неверный API ключ');
-                    } else if (response.status === 403) {
-                        showError('❌ Доступ запрещен');
-                    } else if (response.status === 429) {
-                        showError('❌ Превышен лимит запросов');
-                    } else {
-                        showError('❌ Ошибка: ' + (errorData.error ? errorData.error.message : 'HTTP ' + response.status));
-                    }
-                    return;
+                    const errorText = await response.text();
+                    throw new Error('HTTP ' + response.status + ': ' + errorText);
                 }
                 
                 const data = await response.json();
+                const translation = data.choices[0].message.content.trim();
                 
-                let translation = '';
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    translation = data.choices[0].message.content.trim();
-                } else if (data.choices && data.choices[0] && data.choices[0].text) {
-                    translation = data.choices[0].text.trim();
-                } else {
-                    throw new Error('Некорректный ответ API');
-                }
-                
-                const textElement = mode === 'live' 
-                    ? document.getElementById('translatedText') 
-                    : document.getElementById('fileTranslatedText');
-                textElement.textContent = translation;
-                
+                document.getElementById('translated').textContent = translation;
                 lastTranslation = translation;
                 lastTranslationLang = targetLang;
                 
-                const sourceLangName = direction === 'listen' 
-                    ? (lang === 'zh-CN' ? 'Китайский' : 'Английский') 
-                    : 'Русский';
-                const targetLangName = direction === 'listen' 
-                    ? 'Русский' 
-                    : (lang === 'zh-CN' ? 'Китайский' : 'Английский');
-                
-                addToHistory(text, translation, sourceLangName, targetLangName, mode);
+                // Автоматическая озвучка
+                speakTranslation();
                 
             } catch (error) {
-                console.error('Translation error:', error);
-                showError('❌ Ошибка перевода: ' + error.message);
+                console.error('Error:', error);
+                showError('❌ ' + error.message);
             } finally {
-                showLoading(false);
+                document.getElementById('loading').style.display = 'none';
             }
         }
         
-        function speakNow(text, lang) {
-            if (!text || !('speechSynthesis' in window)) {
-                showError('⚠️ Озвучка недоступна');
+        function speakTranslation() {
+            if (!lastTranslation || !('speechSynthesis' in window)) {
+                showError('⚠️ Нет текста для озвучки');
                 return;
             }
             
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = lang.startsWith('zh') ? 0.8 : 0.9;
-            utterance.volume = 1.0;
-            
-            utterance.onstart = function() {
-                console.log('🔊 Озвучка началась');
-            };
-            utterance.onerror = function(e) {
-                console.error('Озвучка ошибка:', e);
-                showError('⚠️ Ошибка озвучки');
-            };
-            
+            const utterance = new SpeechSynthesisUtterance(lastTranslation);
+            utterance.lang = lastTranslationLang;
+            utterance.rate = lastTranslationLang.startsWith('zh') ? 0.8 : 0.9;
             window.speechSynthesis.speak(utterance);
         }
         
-        function addToHistory(original, translation, sourceLang, targetLang, mode) {
-            const item = {
-                id: Date.now(),
-                original: original,
-                translation: translation,
-                sourceLang: sourceLang,
-                targetLang: targetLang,
-                mode: mode === 'live' ? 'Запись' : 'Файл',
-                timestamp: new Date().toLocaleString('ru-RU')
-            };
-            history.unshift(item);
-            if (history.length > 50) history = history.slice(0, 50);
-            localStorage.setItem('translationHistory', JSON.stringify(history));
-            renderHistory();
-        }
-        
-        function renderHistory() {
-            const historyList = document.getElementById('historyList');
-            if (history.length === 0) {
-                historyList.innerHTML = '<p style="text-align: center; color: #666;">История пуста</p>';
-                return;
-            }
-            
-            let html = '';
-            for (let i = 0; i < history.length; i++) {
-                const item = history[i];
-                html += '<div class="history-item" data-id="' + item.id + '">' +
-                    '<h4>' + item.mode + ' • ' + item.sourceLang + ' → ' + item.targetLang + ' • ' + item.timestamp + '</h4>' +
-                    '<p><strong>Оригинал:</strong> ' + item.original.substring(0, 100) + (item.original.length > 100 ? '...' : '') + '</p>' +
-                    '<p class="translation"><strong>Перевод:</strong> ' + item.translation.substring(0, 100) + (item.translation.length > 100 ? '...' : '') + '</p>' +
-                    '</div>';
-            }
-            historyList.innerHTML = html;
-            
-            const items = document.querySelectorAll('.history-item');
-            for (let j = 0; j < items.length; j++) {
-                (function(id) {
-                    items[j].addEventListener('click', function() {
-                        const item = history.find(function(h) { return h.id === parseInt(id); });
-                        if (item) {
-                            let lang = 'ru-RU';
-                            if (item.targetLang === 'Китайский') lang = 'zh-CN';
-                            else if (item.targetLang === 'Английский') lang = 'en-US';
-                            speakNow(item.translation, lang);
-                        }
-                    });
-                })(items[j].getAttribute('data-id'));
-            }
-        }
-        
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(function() { errorDiv.style.display = 'none'; }, 8000);
+        function showError(msg) {
+            const err = document.getElementById('error');
+            err.textContent = msg;
+            err.style.display = 'block';
+            setTimeout(() => { err.style.display = 'none'; }, 10000);
         }
         
         function hideError() {
             document.getElementById('error').style.display = 'none';
-        }
-        
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
     </script>
 </body>
